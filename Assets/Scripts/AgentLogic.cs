@@ -87,6 +87,8 @@ public class AgentLogic : MonoBehaviour, IComparable
 
     private bool _isAwake;
 
+    #region Genes
+
     [Header("Genes")] [SerializeField, Tooltip("Steps for the area of sight.")]
     private int steps;
 
@@ -101,7 +103,9 @@ public class AgentLogic : MonoBehaviour, IComparable
     [SerializeField,
      Tooltip("All directions starts with a random value from X-Y (Math.Abs, Math.Min and Math.Max are applied).")]
     private Vector2 randomDirectionValue;
+    #endregion
 
+    #region Weights
     [Space(10)] [Header("Weights")] [SerializeField]
     private float boxWeight;
 
@@ -119,6 +123,7 @@ public class AgentLogic : MonoBehaviour, IComparable
 
     [SerializeField, Tooltip("Shows visualization rays.")]
     private bool debug;
+    #endregion
 
     #region Static Variables
 
