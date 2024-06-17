@@ -1,26 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 public class GenerationManager : MonoBehaviour
 {
-    [Header("Generators")] [SerializeField]
+    [Header("Generators")]
+    [SerializeField]
     private GenerateObjectsInArea[] boxGenerators;
 
     [SerializeField] private GenerateObjectsInArea boatGenerator;
     [SerializeField] private GenerateObjectsInArea pirateGenerator;
 
-    [Space(10)] [Header("Parenting and Mutation")] [SerializeField]
+    [Space(10)]
+    [Header("Parenting and Mutation")]
+    [SerializeField]
     private float mutationFactor;
 
     [SerializeField] private float mutationChance;
     [SerializeField] private int boatParentSize;
     [SerializeField] private int pirateParentSize;
 
-    [Space(10)] [Header("Simulation Controls")] [SerializeField, Tooltip("Time per simulation (in seconds).")]
+    [Space(10)]
+    [Header("Simulation Controls")]
+    [SerializeField, Tooltip("Time per simulation (in seconds).")]
     private float simulationTimer;
 
     [SerializeField, Tooltip("Current time spent on this simulation.")]
@@ -32,13 +38,16 @@ public class GenerationManager : MonoBehaviour
     [SerializeField, Tooltip("Initial count for the simulation. Used for the Prefabs naming.")]
     private int generationCount;
 
-    [Space(10)] [Header("Prefab Saving")] [SerializeField]
+    [Space(10)]
+    [Header("Prefab Saving")]
+    [SerializeField]
     private string savePrefabsAt;
 
     /// <summary>
     /// Those variables are used mostly for debugging in the inspector.
     /// </summary>
-    [Header("Former winners")] [SerializeField]
+    [Header("Former winners")]
+    [SerializeField]
     private AgentData lastBoatWinnerData;
 
     [SerializeField] private AgentData lastPirateWinnerData;
@@ -49,8 +58,9 @@ public class GenerationManager : MonoBehaviour
     private BoatLogic[] _boatParents;
     private PirateLogic[] _pirateParents;
 
-    [Serializable] private enum FitnessMode
-    { 
+    [Serializable]
+    private enum FitnessMode
+    {
         Points,
         Weights,
         RankedOnPoints,
@@ -126,8 +136,19 @@ public class GenerationManager : MonoBehaviour
             _activePirates.Add(pirate);
             if (pirateParents != null)
             {
-                var pirateParent = lastPirateWinnerData;
-                pirate.Birth(pirateParent);
+                switch (_fitnessMode)
+                {
+                    case FitnessMode.Points:
+                    case FitnessMode.Weights:
+                        var pirateParent = pirateParents[0];
+                        pirate.Birth(pirateParents[0].GetData());
+                        break;
+
+                    case FitnessMode.RankedOnPoints:
+                    case FitnessMode.RankedOnWeights:
+                        pirate.Birth(pirateParents[0], pirateParents[1]);
+                        break;
+                }
             }
 
             pirate.Mutate(mutationFactor, mutationChance);
@@ -150,8 +171,20 @@ public class GenerationManager : MonoBehaviour
             _activeBoats.Add(boat);
             if (boatParents != null)
             {
-                var boatParent = lastBoatWinnerData;
-                boat.Birth(boatParent);
+                switch(_fitnessMode)
+                {
+                    case FitnessMode.Points:
+                    case FitnessMode.Weights:
+                        var boatParent = boatParents[0];
+                        boat.Birth(boatParent.GetData());
+                        break;
+
+                    case FitnessMode.RankedOnPoints:
+                    case FitnessMode.RankedOnWeights:
+                        boat.Birth(boatParents[0], boatParents[1]);
+                        break;
+                }
+                
             }
 
             boat.Mutate(mutationFactor, mutationChance);
@@ -185,20 +218,34 @@ public class GenerationManager : MonoBehaviour
             _boatParents[i] = _activeBoats[i];
         }
 
-        var lastBoatWinner = (new BoatLogic(), 0f);
+        //var lastBoatWinner = (new BoatLogic(), 0f);
+        var _boatFitness = (new List<BoatLogic>(), new List<float>());
+        _boatFitness.Item1.Clear();
+        _boatFitness.Item2.Clear();
+        _boatFitness = Fitness(_boatParents.ToList());
+
         switch (_fitnessMode)
         {
             case FitnessMode.Points:
-                lastBoatWinner = FitnessBasedOnPoints(_boatParents.ToList()); 
-                break;
             case FitnessMode.Weights:
-                lastBoatWinner = FitnessBasedOnWeights(_boatParents.ToList());
+                _boatFitness.Item1[0].name += "Gen-" + generationCount;
+                lastBoatWinnerData = _boatFitness.Item1[0].GetData();
+                CVSWriter.Instance.WriteCVS(lastBoatWinnerData, CVSWriter.BoatType.Boat, _boatFitness.Item2[0]); //Write the winner in the CSV file
+                PrefabUtility.SaveAsPrefabAsset(_boatFitness.Item1[0].gameObject, savePrefabsAt + _boatFitness.Item1[0].name + ".prefab");
+                break;
+
+            case FitnessMode.RankedOnPoints:
+            case FitnessMode.RankedOnWeights:
+                _boatFitness.Item1[0].name += "Parent 1 Gen-" + generationCount;
+                _boatFitness.Item1[1].name += "Parent 2 Gen-" + generationCount;
+                lastBoatWinnerData = _boatFitness.Item1[0].GetData();
+                CVSWriter.Instance.WriteCVS(lastBoatWinnerData, CVSWriter.BoatType.Boat, _boatFitness.Item2[0]); //Write the winner in the CSV file
+                //CVSWriter.Instance.WriteCVS(lastBoatWinnerData, CVSWriter.BoatType.Boat, _boatFitness.Item2[1]); //Write the winner in the CSV file
+                PrefabUtility.SaveAsPrefabAsset(_boatFitness.Item1[0].gameObject, savePrefabsAt + _boatFitness.Item1[0].name + ".prefab");
+                PrefabUtility.SaveAsPrefabAsset(_boatFitness.Item1[1].gameObject, savePrefabsAt + _boatFitness.Item1[1].name + ".prefab");
                 break;
         }
-        lastBoatWinner.Item1.name += "Gen-" + generationCount;
-        lastBoatWinnerData = lastBoatWinner.Item1.GetData();
-        CVSWriter.Instance.WriteCVS(lastBoatWinnerData, CVSWriter.BoatType.Boat, lastBoatWinner.Item2); //Write the winner in the CSV file
-        PrefabUtility.SaveAsPrefabAsset(lastBoatWinner.Item1.gameObject, savePrefabsAt + lastBoatWinner.Item1.name + ".prefab");
+
 
         _activePirates.RemoveAll(item => item == null);
         _activePirates.Sort();
@@ -209,100 +256,107 @@ public class GenerationManager : MonoBehaviour
         }
 
 
-        var lastPirateWinner = (new PirateLogic(), 0f);
+        //var lastPirateWinner = (new PirateLogic(), 0f);
+        var _pirateFitness = (new List<PirateLogic>(), new List<float>());
+        _pirateFitness.Item1.Clear();
+        _pirateFitness.Item2.Clear();
+        _pirateFitness = Fitness(_pirateParents.ToList());
+
         switch (_fitnessMode)
         {
             case FitnessMode.Points:
-                lastPirateWinner = FitnessBasedOnPoints(_pirateParents.ToList());
-                break;
             case FitnessMode.Weights:
-                lastPirateWinner = FitnessBasedOnWeights(_pirateParents.ToList());
+                _pirateFitness.Item1[0].name += "Gen-" + generationCount;
+                lastPirateWinnerData = _pirateFitness.Item1[0].GetData();
+                CVSWriter.Instance.WriteCVS(lastPirateWinnerData, CVSWriter.BoatType.Pirate, _pirateFitness.Item2[0]); //Write the winner in the CSV file
+
+                PrefabUtility.SaveAsPrefabAsset(_pirateFitness.Item1[0].gameObject, savePrefabsAt + _pirateFitness.Item1[0].name + ".prefab");
+
+                //Winners:
+                Debug.Log("Last winner boat had: " + _boatFitness.Item2[0] + " points!" + " Last winner pirate had: " +
+                          _pirateFitness.Item2[0] + " fitness!");
+                break;
+
+            case FitnessMode.RankedOnPoints:
+            case FitnessMode.RankedOnWeights:
+                _pirateFitness.Item1[0].name += "Parent 1 Gen-" + generationCount;
+                _pirateFitness.Item1[1].name += "Parent 2 Gen-" + generationCount;
+                lastBoatWinnerData = _pirateFitness.Item1[0].GetData();
+                CVSWriter.Instance.WriteCVS(lastBoatWinnerData, CVSWriter.BoatType.Boat, _pirateFitness.Item2[0]); //Write the winner in the CSV file
+                //CVSWriter.Instance.WriteCVS(lastBoatWinnerData, CVSWriter.BoatType.Boat, _boatFitness.Item2[1]); //Write the winner in the CSV file
+                PrefabUtility.SaveAsPrefabAsset(_pirateFitness.Item1[0].gameObject, savePrefabsAt + _pirateFitness.Item1[0].name + ".prefab");
+                PrefabUtility.SaveAsPrefabAsset(_pirateFitness.Item1[1].gameObject, savePrefabsAt + _pirateFitness.Item1[1].name + ".prefab");
                 break;
         }
 
-        lastPirateWinner.Item1.name += "Gen-" + generationCount;
-        lastPirateWinnerData = lastPirateWinner.Item1.GetData();
-        CVSWriter.Instance.WriteCVS(lastPirateWinnerData, CVSWriter.BoatType.Pirate, lastPirateWinner.Item2); //Write the winner in the CSV file
-
-        PrefabUtility.SaveAsPrefabAsset(lastPirateWinner.Item1.gameObject, savePrefabsAt + lastPirateWinner.Item1.name + ".prefab");
-
-        //Winners:
-        Debug.Log("Last winner boat had: " + lastBoatWinner.Item2 + " points!" + " Last winner pirate had: " +
-                  lastPirateWinner.Item2 + " fitness!");
-
-        GenerateObjects(_boatParents, _pirateParents);
+        GenerateObjects(_boatFitness.Item1.ToArray(), _pirateFitness.Item1.ToArray());
+        //GenerateObjects(_boatParents, _pirateParents);
     }
 
-    (BoatLogic,float) FitnessBasedOnPoints(List<BoatLogic> _aliveBoats)
+    (List<BoatLogic>, List<float>) Fitness(List<BoatLogic> _boats)
     {
-        float maxFitness = -1000;
-        BoatLogic fittest = new BoatLogic();
-
-        for(int i = 0; i < _aliveBoats.Count; i++)
-        {
-            if(maxFitness < _aliveBoats[i].GetPoints() / targetPoints)
-            {
-                maxFitness = _aliveBoats[i].GetPoints() / targetPoints;
-                fittest = _aliveBoats[i];
-            }
-        }
-
-        return (fittest, maxFitness);
-    }
-
-    (PirateLogic, float) FitnessBasedOnPoints(List<PirateLogic> _pirates)
-    {
-        float maxFitness = -1000;
-        PirateLogic fittest = new PirateLogic();
-
-        for (int i = 0; i < _pirates.Count; i++)
-        {
-            if (maxFitness < _pirates[i].GetPoints() / targetPoints)
-            {
-                maxFitness = _pirates[i].GetPoints() / targetPoints;
-                fittest = _pirates[i];
-            }
-        }
-
-        return (fittest, maxFitness);
-    }
-
-    (BoatLogic, float) FitnessBasedOnWeights(List<BoatLogic> _boats)
-    {
-        float maxFitness = -1000;
-        BoatLogic fittest = new BoatLogic();
+        //float maxFitness = -1000;
+        //BoatLogic fittest = new BoatLogic();
         float score = 0;
 
-        for (int i = 0; i < _boats.Count; i++)
+        //List<float> fitness = new List<float>();
+        Dictionary<BoatLogic, float> fitness = new Dictionary<BoatLogic, float>();
+        switch (_fitnessMode)
         {
-            score = _boats[i].GetWeightsTotal();
-            if(maxFitness <  score / targetWeightsTotal)
-            {
-                maxFitness = score / targetWeightsTotal;
-                fittest = _boats[i];
-            }
-        }
+            case FitnessMode.Points:
+            case FitnessMode.RankedOnPoints:
+                for (int i = 0; i < _boats.Count; i++)
+                {
+                    fitness.Add(_boats[i], _boats[i].GetPoints() / targetPoints);
+                }
+                break;
 
-        return (fittest, maxFitness);
+            case FitnessMode.Weights:
+            case FitnessMode.RankedOnWeights:
+                for (int i = 0; i < _boats.Count; i++)
+                {
+                    score = _boats[i].GetWeightsTotal();
+                    fitness.Add(_boats[i], score / targetWeightsTotal);
+                }
+                break;
+
+        }
+        fitness.OrderBy(kvp => kvp.Value).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+        return (fitness.Keys.ToList(), fitness.Values.ToList());
     }
 
-    (PirateLogic, float) FitnessBasedOnWeights(List<PirateLogic> _pirates)
+    (List<PirateLogic>, List<float>) Fitness(List<PirateLogic> _pirates)
     {
-        float maxFitness = -1000;
+        //float maxFitness = -1000;
         PirateLogic fittest = new PirateLogic();
         float score = 0;
 
-        for (int i = 0; i < _pirates.Count; i++)
+        //List<float> fitness = new List<float>();
+        Dictionary<PirateLogic, float> fitness = new Dictionary<PirateLogic, float>();
+        switch (_fitnessMode)
         {
-            score = _pirates[i].GetWeightsTotal();
-            if (maxFitness < score / targetWeightsTotal)
-            {
-                maxFitness = score / targetWeightsTotal;
-                fittest = _pirates[i];
-            }
-        }
+            case FitnessMode.Points:
+            case FitnessMode.RankedOnPoints:
+                for (int i = 0; i < _pirates.Count; i++)
+                {
+                    fitness.Add(_pirates[i], _pirates[i].GetPoints() / targetPoints);
+                }
+                break;
 
-        return (fittest, maxFitness);
+            case FitnessMode.Weights:
+            case FitnessMode.RankedOnWeights:
+                for (int i = 0; i < _pirates.Count; i++)
+                {
+                    score = _pirates[i].GetWeightsTotal();
+                    fitness.Add(_pirates[i], score / targetWeightsTotal);
+                }
+                break;
+
+        }
+        fitness.OrderBy(kvp => kvp.Value).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+        return (fitness.Keys.ToList(), fitness.Values.ToList());
     }
 
     /// <summary>

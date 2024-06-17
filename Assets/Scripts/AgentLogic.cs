@@ -171,6 +171,24 @@ public class AgentLogic : MonoBehaviour, IComparable
         enemyDistanceFactor = parent.enemyDistanceFactor;
     }
 
+    public void Birth(AgentLogic p1, AgentLogic p2)
+    {
+        //takes the best genes from the 2 parents
+        steps = (p1.steps > p2.steps? p1.steps : p2.steps);
+        rayRadius = (p1.rayRadius > p2.rayRadius? p1.rayRadius : p2.rayRadius);
+        sight = (p1.sight >  p2.sight? p1.sight : p2.sight);
+        movingSpeed = (p1.movingSpeed > p2.movingSpeed? p1.movingSpeed : p2.movingSpeed);
+        randomDirectionValue = (p1.randomDirectionValue.magnitude > p2.randomDirectionValue.magnitude? p1.randomDirectionValue : p2.randomDirectionValue);
+
+        //takes the best genes based on the amount of points
+        boxWeight = (p1.points > p2.points ? p1.boxWeight : p2.boxWeight);
+        distanceFactor = (p1.points > p2.points ? p1.distanceFactor : p2.distanceFactor);
+        boatWeight = (p1.points > p2.points ? p1.boatWeight : p2.boatWeight);
+        boatDistanceFactor = (p1.points > p2.points ? p1.boatDistanceFactor : p2.boatDistanceFactor);
+        enemyWeight = (p1.points > p2.points ? p1.enemyWeight : p2.enemyWeight);
+        enemyDistanceFactor = (p1.points > p2.points ? p1.enemyDistanceFactor : p2.enemyDistanceFactor);
+    }
+
     /// <summary>
     /// Has a mutationChance ([0%, 100%]) of causing a mutationFactor [-mutationFactor, +mutationFactor] to each gene / weight.
     /// The chance of mutation is calculated per gene / weight.
