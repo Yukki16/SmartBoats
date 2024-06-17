@@ -13,7 +13,7 @@ public class BoatLogic : AgentLogic
     #endregion
     public float GetWeightsTotal()
     {
-        return boxWeight + distanceFactor + boatWeight + boatDistanceFactor;
+        return boxWeight - boatWeight - enemyWeight;
     }
     private void OnTriggerEnter(Collider other)
     {

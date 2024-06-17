@@ -13,7 +13,7 @@ public class PirateLogic : AgentLogic
 
     public float GetWeightsTotal()
     {
-        return boxWeight + distanceFactor + boatWeight + boatDistanceFactor + enemyWeight + enemyDistanceFactor;
+        return boatWeight + boxWeight + enemyWeight;
     }
     private void OnTriggerEnter(Collider other)
     {

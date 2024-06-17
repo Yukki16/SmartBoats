@@ -317,7 +317,7 @@ public class GenerationManager : MonoBehaviour
                 break;
 
         }
-        fitness.OrderBy(kvp => kvp.Value).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        fitness.OrderByDescending(kvp => kvp.Value).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
         return (fitness.Keys.ToList(), fitness.Values.ToList());
     }
@@ -350,7 +350,7 @@ public class GenerationManager : MonoBehaviour
                 break;
 
         }
-        fitness.OrderBy(kvp => kvp.Value).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        fitness.OrderByDescending(kvp => kvp.Value).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
         return (fitness.Keys.ToList(), fitness.Values.ToList());
     }
