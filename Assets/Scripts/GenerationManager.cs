@@ -220,8 +220,6 @@ public class GenerationManager : MonoBehaviour
 
         //var lastBoatWinner = (new BoatLogic(), 0f);
         var _boatFitness = (new List<BoatLogic>(), new List<float>());
-        _boatFitness.Item1.Clear();
-        _boatFitness.Item2.Clear();
         _boatFitness = Fitness(_boatParents.ToList());
 
         switch (_fitnessMode)
@@ -229,8 +227,8 @@ public class GenerationManager : MonoBehaviour
             case FitnessMode.Points:
             case FitnessMode.Weights:
                 _boatFitness.Item1[0].name += "Gen-" + generationCount;
-                lastBoatWinnerData = _boatFitness.Item1[0].GetData();
-                CVSWriter.Instance.WriteCVS(lastBoatWinnerData, CVSWriter.BoatType.Boat, _boatFitness.Item2[0]); //Write the winner in the CSV file
+                //lastBoatWinnerData = _boatFitness.Item1[0].GetData();
+                CVSWriter.Instance.WriteCVS(_boatFitness.Item1[0].GetData(), CVSWriter.BoatType.Boat, _boatFitness.Item2[0]); //Write the winner in the CSV file
                 PrefabUtility.SaveAsPrefabAsset(_boatFitness.Item1[0].gameObject, savePrefabsAt + _boatFitness.Item1[0].name + ".prefab");
                 break;
 
@@ -238,9 +236,9 @@ public class GenerationManager : MonoBehaviour
             case FitnessMode.RankedOnWeights:
                 _boatFitness.Item1[0].name += "Parent 1 Gen-" + generationCount;
                 _boatFitness.Item1[1].name += "Parent 2 Gen-" + generationCount;
-                lastBoatWinnerData = _boatFitness.Item1[0].GetData();
-                CVSWriter.Instance.WriteCVS(lastBoatWinnerData, CVSWriter.BoatType.Boat, _boatFitness.Item2[0]); //Write the winner in the CSV file
-                //CVSWriter.Instance.WriteCVS(lastBoatWinnerData, CVSWriter.BoatType.Boat, _boatFitness.Item2[1]); //Write the winner in the CSV file
+                //lastBoatWinnerData = _boatFitness.Item1[0].GetData();
+                CVSWriter.Instance.WriteCVS(_boatFitness.Item1[0].GetData(), CVSWriter.BoatType.Boat, _boatFitness.Item2[0]); //Write the winner in the CSV file
+                CVSWriter.Instance.WriteCVS(_boatFitness.Item1[1].GetData(), CVSWriter.BoatType.Boat, _boatFitness.Item2[1]); //Write the winner in the CSV file
                 PrefabUtility.SaveAsPrefabAsset(_boatFitness.Item1[0].gameObject, savePrefabsAt + _boatFitness.Item1[0].name + ".prefab");
                 PrefabUtility.SaveAsPrefabAsset(_boatFitness.Item1[1].gameObject, savePrefabsAt + _boatFitness.Item1[1].name + ".prefab");
                 break;
@@ -258,8 +256,6 @@ public class GenerationManager : MonoBehaviour
 
         //var lastPirateWinner = (new PirateLogic(), 0f);
         var _pirateFitness = (new List<PirateLogic>(), new List<float>());
-        _pirateFitness.Item1.Clear();
-        _pirateFitness.Item2.Clear();
         _pirateFitness = Fitness(_pirateParents.ToList());
 
         switch (_fitnessMode)
@@ -267,23 +263,23 @@ public class GenerationManager : MonoBehaviour
             case FitnessMode.Points:
             case FitnessMode.Weights:
                 _pirateFitness.Item1[0].name += "Gen-" + generationCount;
-                lastPirateWinnerData = _pirateFitness.Item1[0].GetData();
-                CVSWriter.Instance.WriteCVS(lastPirateWinnerData, CVSWriter.BoatType.Pirate, _pirateFitness.Item2[0]); //Write the winner in the CSV file
+                //lastPirateWinnerData = _pirateFitness.Item1[0].GetData();
+                CVSWriter.Instance.WriteCVS(_pirateFitness.Item1[0].GetData(), CVSWriter.BoatType.Pirate, _pirateFitness.Item2[0]); //Write the winner in the CSV file
 
                 PrefabUtility.SaveAsPrefabAsset(_pirateFitness.Item1[0].gameObject, savePrefabsAt + _pirateFitness.Item1[0].name + ".prefab");
 
                 //Winners:
-                Debug.Log("Last winner boat had: " + _boatFitness.Item2[0] + " points!" + " Last winner pirate had: " +
-                          _pirateFitness.Item2[0] + " fitness!");
+                /*Debug.Log("Last winner boat had: " + _boatFitness.Item2[0] + " points!" + " Last winner pirate had: " +
+                          _pirateFitness.Item2[0] + " fitness!");*/
                 break;
 
             case FitnessMode.RankedOnPoints:
             case FitnessMode.RankedOnWeights:
                 _pirateFitness.Item1[0].name += "Parent 1 Gen-" + generationCount;
                 _pirateFitness.Item1[1].name += "Parent 2 Gen-" + generationCount;
-                lastBoatWinnerData = _pirateFitness.Item1[0].GetData();
-                CVSWriter.Instance.WriteCVS(lastBoatWinnerData, CVSWriter.BoatType.Boat, _pirateFitness.Item2[0]); //Write the winner in the CSV file
-                //CVSWriter.Instance.WriteCVS(lastBoatWinnerData, CVSWriter.BoatType.Boat, _boatFitness.Item2[1]); //Write the winner in the CSV file
+                //lastBoatWinnerData = _pirateFitness.Item1[0].GetData();
+                CVSWriter.Instance.WriteCVS(_pirateFitness.Item1[0].GetData(), CVSWriter.BoatType.Pirate, _pirateFitness.Item2[0]); //Write the winner in the CSV file
+                CVSWriter.Instance.WriteCVS(_pirateFitness.Item1[1].GetData(), CVSWriter.BoatType.Pirate, _boatFitness.Item2[1]); //Write the winner in the CSV file
                 PrefabUtility.SaveAsPrefabAsset(_pirateFitness.Item1[0].gameObject, savePrefabsAt + _pirateFitness.Item1[0].name + ".prefab");
                 PrefabUtility.SaveAsPrefabAsset(_pirateFitness.Item1[1].gameObject, savePrefabsAt + _pirateFitness.Item1[1].name + ".prefab");
                 break;
