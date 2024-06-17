@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -48,8 +49,16 @@ public class GenerationManager : MonoBehaviour
     private BoatLogic[] _boatParents;
     private PirateLogic[] _pirateParents;
 
-
+    [Serializable] private enum FitnessMode
+    { 
+        Points,
+        Weights,
+        RankedOnPoints,
+        RankedOnWeights
+    }
+    [SerializeField] private FitnessMode _fitnessMode;
     [SerializeField] float targetPoints = 0;
+    [SerializeField] float targetWeightsTotal = 0;
     private void Awake()
     {
         Random.InitState(6);
@@ -176,11 +185,20 @@ public class GenerationManager : MonoBehaviour
             _boatParents[i] = _activeBoats[i];
         }
 
-        var lastBoatWinner = FitnessBasedOnPoints(_boatParents.ToList()).Item1; //Last winner will be the one with the height fitness
-        lastBoatWinner.name += "Gen-" + generationCount;
-        lastBoatWinnerData = lastBoatWinner.GetData();
-        CVSWriter.Instance.WriteCVS(lastBoatWinnerData, CVSWriter.BoatType.Boat, FitnessBasedOnPoints(_boatParents.ToList()).Item2); //Write the winner in the CSV file
-        PrefabUtility.SaveAsPrefabAsset(lastBoatWinner.gameObject, savePrefabsAt + lastBoatWinner.name + ".prefab");
+        var lastBoatWinner = (new BoatLogic(), 0f);
+        switch (_fitnessMode)
+        {
+            case FitnessMode.Points:
+                lastBoatWinner = FitnessBasedOnPoints(_boatParents.ToList()); 
+                break;
+            case FitnessMode.Weights:
+                lastBoatWinner = FitnessBasedOnWeights(_boatParents.ToList());
+                break;
+        }
+        lastBoatWinner.Item1.name += "Gen-" + generationCount;
+        lastBoatWinnerData = lastBoatWinner.Item1.GetData();
+        CVSWriter.Instance.WriteCVS(lastBoatWinnerData, CVSWriter.BoatType.Boat, lastBoatWinner.Item2); //Write the winner in the CSV file
+        PrefabUtility.SaveAsPrefabAsset(lastBoatWinner.Item1.gameObject, savePrefabsAt + lastBoatWinner.Item1.name + ".prefab");
 
         _activePirates.RemoveAll(item => item == null);
         _activePirates.Sort();
@@ -190,16 +208,27 @@ public class GenerationManager : MonoBehaviour
             _pirateParents[i] = _activePirates[i];
         }
 
-        var lastPirateWinner = FitnessBasedOnPoints(_pirateParents.ToList()).Item1;
-        lastPirateWinner.name += "Gen-" + generationCount;
-        lastPirateWinnerData = lastPirateWinner.GetData();
-        CVSWriter.Instance.WriteCVS(lastPirateWinnerData, CVSWriter.BoatType.Pirate, FitnessBasedOnPoints(_pirateParents.ToList()).Item2); //Write the winner in the CSV file
 
-        PrefabUtility.SaveAsPrefabAsset(lastPirateWinner.gameObject, savePrefabsAt + lastPirateWinner.name + ".prefab");
+        var lastPirateWinner = (new PirateLogic(), 0f);
+        switch (_fitnessMode)
+        {
+            case FitnessMode.Points:
+                lastPirateWinner = FitnessBasedOnPoints(_pirateParents.ToList());
+                break;
+            case FitnessMode.Weights:
+                lastPirateWinner = FitnessBasedOnWeights(_pirateParents.ToList());
+                break;
+        }
+
+        lastPirateWinner.Item1.name += "Gen-" + generationCount;
+        lastPirateWinnerData = lastPirateWinner.Item1.GetData();
+        CVSWriter.Instance.WriteCVS(lastPirateWinnerData, CVSWriter.BoatType.Pirate, lastPirateWinner.Item2); //Write the winner in the CSV file
+
+        PrefabUtility.SaveAsPrefabAsset(lastPirateWinner.Item1.gameObject, savePrefabsAt + lastPirateWinner.Item1.name + ".prefab");
 
         //Winners:
-        Debug.Log("Last winner boat had: " + lastBoatWinner.GetPoints() + " points!" + " Last winner pirate had: " +
-                  lastPirateWinner.GetPoints() + " points!");
+        Debug.Log("Last winner boat had: " + lastBoatWinner.Item2 + " points!" + " Last winner pirate had: " +
+                  lastPirateWinner.Item2 + " fitness!");
 
         GenerateObjects(_boatParents, _pirateParents);
     }
@@ -231,6 +260,44 @@ public class GenerationManager : MonoBehaviour
             if (maxFitness < _pirates[i].GetPoints() / targetPoints)
             {
                 maxFitness = _pirates[i].GetPoints() / targetPoints;
+                fittest = _pirates[i];
+            }
+        }
+
+        return (fittest, maxFitness);
+    }
+
+    (BoatLogic, float) FitnessBasedOnWeights(List<BoatLogic> _boats)
+    {
+        float maxFitness = -1000;
+        BoatLogic fittest = new BoatLogic();
+        float score = 0;
+
+        for (int i = 0; i < _boats.Count; i++)
+        {
+            score = _boats[i].GetWeightsTotal();
+            if(maxFitness <  score / targetWeightsTotal)
+            {
+                maxFitness = score / targetWeightsTotal;
+                fittest = _boats[i];
+            }
+        }
+
+        return (fittest, maxFitness);
+    }
+
+    (PirateLogic, float) FitnessBasedOnWeights(List<PirateLogic> _pirates)
+    {
+        float maxFitness = -1000;
+        PirateLogic fittest = new PirateLogic();
+        float score = 0;
+
+        for (int i = 0; i < _pirates.Count; i++)
+        {
+            score = _pirates[i].GetWeightsTotal();
+            if (maxFitness < score / targetWeightsTotal)
+            {
+                maxFitness = score / targetWeightsTotal;
                 fittest = _pirates[i];
             }
         }

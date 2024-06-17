@@ -107,13 +107,13 @@ public class AgentLogic : MonoBehaviour, IComparable
 
     #region Weights
     [Space(10)] [Header("Weights")] [SerializeField]
-    private float boxWeight;
+    private protected float boxWeight;
 
-    [SerializeField] private float distanceFactor;
-    [SerializeField] private float boatWeight;
-    [SerializeField] private float boatDistanceFactor;
-    [SerializeField] private float enemyWeight;
-    [SerializeField] private float enemyDistanceFactor;
+    [SerializeField] private protected float distanceFactor;
+    [SerializeField] private protected float boatWeight;
+    [SerializeField] private protected float boatDistanceFactor;
+    [SerializeField] private protected float enemyWeight;
+    [SerializeField] private protected float enemyDistanceFactor;
 
     [Space(10)] [Header("Debug & Help")] [SerializeField]
     private Color visionColor;

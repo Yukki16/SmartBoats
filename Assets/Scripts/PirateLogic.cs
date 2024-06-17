@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using TMPro;
+using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
 public class PirateLogic : AgentLogic
@@ -10,6 +11,10 @@ public class PirateLogic : AgentLogic
 
     #endregion
 
+    public float GetWeightsTotal()
+    {
+        return boxWeight + distanceFactor + boatWeight + boatDistanceFactor + enemyWeight + enemyDistanceFactor;
+    }
     private void OnTriggerEnter(Collider other)
     {
         if (!other.gameObject.tag.Equals("Box")) return;

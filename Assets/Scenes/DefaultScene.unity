@@ -35645,7 +35645,7 @@ MonoBehaviour:
   mutationChance: 35
   boatParentSize: 5
   pirateParentSize: 2
-  simulationTimer: 5
+  simulationTimer: 10
   simulationCount: 0
   runOnStart: 1
   generationCount: -1
@@ -35674,6 +35674,9 @@ MonoBehaviour:
     boatDistanceFactor: 0
     enemyWeight: 0
     enemyDistanceFactor: 0
+  _fitnessMode: 1
+  targetPoints: 20
+  targetWeightsTotal: 20
 --- !u!4 &1448668717
 Transform:
   m_ObjectHideFlags: 0

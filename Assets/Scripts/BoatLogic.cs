@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using TMPro;
+using UnityEngine;
 using Random = UnityEngine.Random;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -10,7 +11,10 @@ public class BoatLogic : AgentLogic
     private static readonly float _piratePoints = -100.0f;
 
     #endregion
-
+    public float GetWeightsTotal()
+    {
+        return boxWeight + distanceFactor + boatWeight + boatDistanceFactor - enemyWeight - enemyDistanceFactor;
+    }
     private void OnTriggerEnter(Collider other)
     {
         if (!other.gameObject.tag.Equals("Box")) return;

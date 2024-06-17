@@ -29,11 +29,11 @@ public class CVSWriter : MonoBehaviour
         boatFileName = Application.dataPath + "/Boat.csv";
         pirateFileName = Application.dataPath + "/PirateResults.csv";
         TextWriter tw = new StreamWriter(boatFileName, true);
-        tw.WriteLine("Steps, RayRadius, Sight, MovingSpeed, RandomDirectionValue, Fitness");
+        tw.WriteLine("Steps, RayRadius, Sight, MovingSpeed, RandomDirectionValue, Weights, boxWeight, distanceFactor, boatWeight, boatDistanceFactor, enemyWeight, enemyDistanceFactor, Fitness");
         tw.Close();
 
         tw = new StreamWriter(pirateFileName, true);
-        tw.WriteLine("Steps, RayRadius, Sight, MovingSpeed, RandomDirectionValue, Fitness");
+        tw.WriteLine("Steps, RayRadius, Sight, MovingSpeed, RandomDirectionValue, Weights, boxWeight, distanceFactor, boatWeight, boatDistanceFactor, enemyWeight, enemyDistanceFactor, Fitness");
         tw.Close();
     }
 
@@ -45,23 +45,19 @@ public class CVSWriter : MonoBehaviour
 
     public void WriteCVS(AgentData agentData, BoatType boatType, float fitness)
     {
+        TextWriter tw;
         if (boatType == BoatType.Boat)
         {
-            TextWriter tw = new StreamWriter(boatFileName, true);
-
-            tw.WriteLine($"{agentData.steps}, {agentData.rayRadius}, {agentData.sight}, {agentData.movingSpeed}, X:{agentData.randomDirectionValue.x} Y:" +
-                $"{agentData.randomDirectionValue.y}, {fitness}");
-
-            tw.Close();
+            tw = new StreamWriter(boatFileName, true);
         }
         else
-        {
-            TextWriter tw = new StreamWriter(pirateFileName, true);
-
-            tw.WriteLine($"{agentData.steps}, {agentData.rayRadius}, {agentData.sight}, {agentData.movingSpeed}, X:{agentData.randomDirectionValue.x} Y:" +
-                $"{agentData.randomDirectionValue.y}, {fitness}");
-
-            tw.Close();
+        {   
+            tw = new StreamWriter(pirateFileName, true);
         }
+
+        tw.WriteLine($"{agentData.steps}, {agentData.rayRadius}, {agentData.sight}, {agentData.movingSpeed}, X:{agentData.randomDirectionValue.x} Y:" +
+                $"{agentData.randomDirectionValue.y},,{agentData.boatWeight}, {agentData.distanceFactor},{agentData.boatWeight}, {agentData.boatDistanceFactor}," +
+                $"{agentData.enemyWeight}, {agentData.enemyDistanceFactor},  {fitness}");
+        tw.Close();
     }
 }
